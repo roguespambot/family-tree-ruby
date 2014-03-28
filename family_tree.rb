@@ -14,7 +14,7 @@ def menu
     puts 'Press a to add a family member.'
     puts 'Press l to list out the family members.'
     puts 'Press m to add who someone is married to.'
-    puts 'Press s to see who someone is married to.'
+    puts 'Press s to see relatives of a person.'
     puts 'Press e to exit.'
     choice = gets.chomp
 
@@ -26,7 +26,7 @@ def menu
     when 'm'
       add_marriage
     when 's'
-      show_marriage
+      show_relatives
     when 'e'
       exit
     end
@@ -36,7 +36,11 @@ end
 def add_person
   puts 'What is the name of the family member?'
   name = gets.chomp
-  Person.create(:name => name)
+  person = Person.create(:name => name)
+  puts "Add parents? (Y/N)"
+  if gets.chomp.upcase == 'Y'
+    add_parents(person)
+  end
   puts name + " was added to the family tree.\n\n"
 end
 
@@ -50,21 +54,109 @@ def add_marriage
   puts spouse1.name + " is now married to " + spouse2.name + "."
 end
 
+def add_parents(person)
+  list
+  puts "Enter the number of the first parent:\n"
+  print ">"
+  parent1 = Person.find(gets.chomp)
+  puts "Enter the number of the second parent:\n"
+  print ">"
+  parent2 = Person.find(gets.chomp)
+  person.update(:parent1_id => parent1.id, :parent2_id => parent2.id)
+  puts "#{person.name} is the kid of #{parent1.name} and #{parent2.name}"
+end
+
 def list
-  puts 'Here are all your relatives:'
+  puts "Here are all your relatives:\n"
   people = Person.all
   people.each do |person|
-    puts person.id.to_s + " " + person.name
+    puts "#{person.id.to_s}: #{person.name}"
   end
   puts "\n"
 end
 
-def show_marriage
+def show_relatives
   list
-  puts "Enter the number of the relative and I'll show you who they're married to."
+  puts "\n\nEnter the number of the relative and I'll show you who they're related to."
   person = Person.find(gets.chomp)
-  spouse = Person.find(person.spouse_id)
-  puts person.name + " is married to " + spouse.name + "."
+
+  show_marriage(person)
+  show_parents(person)
+  show_grandparents(person)
+  show_descendants(person)
+  # show_grandkids(person)
 end
+
+def show_marriage(person)
+  if person.spouse_id == nil
+    puts "#{person.name} is unmarried."
+  else
+    spouse = Person.find(person.spouse_id)
+    puts "#{person.name} is married to #{spouse.name}."
+  end
+rescue
+  puts "Oops. Something went wrong with the show_marriage function."
+end
+
+def show_ancestors(person)
+  #
+end
+
+def show_parents(person)
+  if person.parent1_id == nil || person.parent2_id == nil
+    puts "#{person.name} does not have both parents in the database."
+  else
+  parent1 = Person.find(person.parent1_id)
+  parent2 = Person.find(person.parent2_id)
+  puts "\n\n#{person.name} is a kid of #{parent1.name} and #{parent2.name}."
+  end
+rescue
+  puts "Oops. Something went wrong with the show_parents function."
+end
+
+def show_descendants(person, type="kid", generation=0)
+  until generation == nil
+    if person.send("#{type}s".to_sym).count == 0
+      puts "#{person.name} has no #{type}s."
+      generation = nil
+    else
+      puts "\n\n#{person.name} has these #{type}s:"
+      person.send("#{type}s".to_sym).each { |type| puts type.name }
+
+      generation += 1
+      if generation > 0
+        type = "grand" + type  #Somehow adding grand on every time
+        if generation > 1
+          type = ("great" * generation) + type
+          show_descendants(person, type, generation)
+        end
+      end
+    end
+  end
+rescue
+  puts "Oops. Something went wrong with the show_#{type}s function."
+end
+
+def show_grandparents(person)
+  if person.grandparents == nil || person.grandparents.count != 4
+    puts "#{person.name} does not appear to have the correct number of grandparents. Please check parental associations."
+  else
+  puts "\n\n#{person.name} has grandparents: "
+  person.grandparents.each { |grandparent| puts grandparent.name }
+  end
+rescue
+  puts "\nOops. Something went wrong with the show_grandparents function."
+end
+
+# def show_grandkids(person)
+#   if person.grandkids == nil
+#     puts "#{person.name} has no grandkids."
+#   else
+#   puts "\n\n#{person.name} has these grandkids:"
+#   person.grandkids.each { |grandkid| puts grandkid.name }
+# end
+# rescue
+#   puts "\nOops! Something went wrong with the show_grandkids function."
+# end
 
 menu
