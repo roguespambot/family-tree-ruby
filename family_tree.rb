@@ -81,16 +81,10 @@ def pick_family_member
   person = Person.find(gets.chomp)
 
   show_marriage(person)
-  # show_parents(person)
-  # show_grandparents(person)
-  type = 'parent'
-  generation = 0
-  show_relatives(person, type, generation)
-
-  type = 'kid'
-  generation = 0
-  show_relatives(person, type, generation)
-  # show_grandkids(person)
+  show_siblings(person)
+  show_nieces_and_nephews(person)
+  show_descendants(person)
+  show_ancestors(person)
 end
 
 def show_marriage(person)
@@ -104,81 +98,63 @@ rescue
   puts "Oops. Something went wrong with the show_marriage function."
 end
 
-# def show_ancestors(person, type, generation)
-#   until generation == nil
-#     if person.send("#{type}s".to_sym).count == 0
-#       puts "#{person.name} has no #{type}s."
-#       generation = nil
-#     else
-#       puts "\n\n#{person.name} has these #{type}s:"
-#       person.send("#{type}s".to_sym).each { |type| puts type.name }
-
-#       generation += 1
-#       if generation == 1
-#         type = "grand" + type
-#       else
-#         type = "great" + type
-#         show_descendants(person, type, generation)
-#       end
-#     end
-#   end
-# rescue
-#   puts "Oops. Something went wrong with the show_#{type}s function."
-# end
-
-def show_relatives(person, type, generation)
-  until generation == nil
-    if person.send("#{type}s".to_sym) == nil
-      puts "#{person.name} has no #{type}s."
-      generation = nil
+def show_descendants(person, generation=0)
+  unless person.kids.nil?
+    if generation == 0
+      puts "Children:"
+    elsif generation == 1
+      puts "Grandchildren:"
     else
-      puts "\n\n#{person.name} has these #{type}s:"
-      person.send("#{type}s".to_sym).each { |type| puts type.name }
-
-      generation += 1
-      if generation == 1
-        type = "grand" + type
-      else
-        type = "great" + type
-        show_relatives(person, type, generation)
-      end
+      puts ("Great " * (generation - 2)) + "grandchildren:"
     end
+    next_generation = generation + 1
+    person.kids.each { |kid| puts kid.name }
+    person.kids.each { |kid| show_nieces_and_nephews(kid, next_generation)}
+    person.kids.each { |kid| show_descendants(kid, next_generation) }
   end
-rescue
-  puts "Oops. Something went wrong with the show_relative function at generation: #{type}s"
 end
 
-# def show_parents(person)
-#   if person.parents == nil
-#     puts "#{person.name} does not have both parents in the database."
-#   else
-#     puts "\n\n#{person.name} has parents: "
-#     person.parents.each { |parent| puts parent.name }
-#   end
-# rescue
-#   puts "Oops. Something went wrong with the show_parents function."
-# end
+def show_ancestors(person, generation=0)
+  unless person.parents.nil?
+    if generation == 0
+      puts "Parents:"
+    elsif generation == -1
+      puts "Grandparents:"
+    else
+      puts ("Great " * (generation + 2)) + "grandparents:"
+    end
+    previous_generation = generation - 1
+    person.parents.each { |parent| puts parent.name }
+    person.parents.each { |parent| show_siblings(parent, previous_generation) }
+    person.parents.each { |parent| show_ancestors(parent, previous_generation) }
+  end
+end
 
-# def show_grandparents(person)
-#   if person.grandparents == nil || person.grandparents.count != 4
-#     puts "#{person.name} does not appear to have the correct number of grandparents. Please check parental associations."
-#   else
-#     puts "\n\n#{person.name} has grandparents: "
-#     person.grandparents.each { |grandparent| puts grandparent.name }
-#   end
-# rescue
-#   puts "\nOops. Something went wrong with the show_grandparents function."
-# end
+def show_siblings(person, generation=0)
+  # puts person.name
+  unless person.siblings.nil?
+    if generation == 0
+      puts "Siblings:"
+    elsif generation == -1
+      puts "Uncles/Aunts:"
+    elsif generation <= -2
+      puts ("Great " * (generation + 2)) + "uncles/aunts:"
+    end
+    person.siblings.each { |sibling| puts sibling.name }
+  end
+end
 
-# def show_grandkids(person)
-#   if person.grandkids == nil
-#     puts "#{person.name} has no grandkids."
-#   else
-#   puts "\n\n#{person.name} has these grandkids:"
-#   person.grandkids.each { |grandkid| puts grandkid.name }
-# end
-# rescue
-#   puts "\nOops! Something went wrong with the show_grandkids function."
-# end
+def show_nieces_and_nephews(person, generation=0)
+  unless person.nieces_and_nephews.nil?
+    if generation == 0
+      puts "Nieces/Nephews:"
+    elsif generation == 1
+      puts "Grand nieces/nephews:"
+    elsif generation > 1
+      puts ("Great " * (generation + 2)) + "grandnieces/grandnephews:"
+    end
+    person.nieces_and_nephews.each { |n| puts n.name }
+  end
+end
 
 menu

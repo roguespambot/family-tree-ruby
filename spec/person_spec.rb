@@ -2,8 +2,6 @@ require 'spec_helper'
 
 describe Person do
   it { should validate_presence_of :name }
-  # it { should validate_presence_of :parent1_id }
-  # it { should validate_presence_of :parent2_id }
 
   context '#spouse' do
     it 'returns the person with their spouse_id' do
@@ -46,71 +44,69 @@ describe Person do
     end
   end
 
-  context '#grandparents' do
-    it "returns all four of a person's grandparents" do
+  context '#kids' do
+    it "returns one kid if there is only one kid" do
       guy = Person.create(:name => 'Guy')
-      lenna = Person.create(:name => 'Lenna')
-      evelyn = Person.create(:name => 'Evelyn')
-      joseph = Person.create(:name => 'Joseph')
-      tom = Person.create(:name => 'Tom', :parent1_id => guy.id, :parent2_id => lenna.id)
-      jane = Person.create(:name => 'Jane', :parent1_id => evelyn.id, :parent2_id => joseph.id)
-      frank = Person.create(:name => 'Frank', :parent1_id => tom.id, :parent2_id => jane.id)
-      frank.grandparents.should eq [guy, lenna, evelyn, joseph]
-    end
-  end
-
-  context '#children' do
-    it "returns one child if there is only one child" do
-      guy = Person.create(:name => 'Guy')
-      tom = Person.create(:name => 'Tom', :parent1_id => guy.id)
-      guy.children.first.should eq tom
+      jane = Person.create(:name => 'Jane')
+      tom = Person.create(:name => 'Tom', :parent1_id => guy.id, :parent2_id => jane.id)
+      guy.kids.first.should eq tom
     end
 
-    it "returns all of a person's children" do
+    it "returns all of a person's kids" do
       guy = Person.create(:name => 'Guy')
       tom = Person.create(:name => 'Tom', :parent1_id => guy.id)
       jimmy = Person.create(:name => 'Jimmy', :parent1_id => guy.id)
       john = Person.create(:name => 'John', :parent1_id => guy.id)
-      guy.children.should eq [tom, jimmy, john]
+      guy.kids.should eq [tom, jimmy, john]
     end
   end
 
-  context '#grandchildren' do
-    it "returns one grandchild if there is only one grandchild" do
+  context '#siblings' do
+    it "returns all of a person's siblings" do
       guy = Person.create(:name => 'Guy')
-      tom = Person.create(:name => 'Tom', :parent1_id => guy.id)
-      frank = Person.create(:name => 'Frank', :parent1_id => tom.id)
-      guy.grandchildren.should eq [frank]
+      jane = Person.create(:name => 'Jane')
+      tom = Person.create(:name => 'Tom', :parent1_id => guy.id, :parent2_id => jane.id)
+      lenny = Person.create(:name => 'Lenny', :parent1_id => guy.id, :parent2_id => jane.id)
+      tom.siblings.should eq [lenny]
+      lenny.siblings.should eq [tom]
     end
 
-    it "returns multiple grandchildren if there are multiple grandchildren" do
+    it "returns nil for a person with no siblings" do
       guy = Person.create(:name => 'Guy')
-      tom = Person.create(:name => 'Tom', :parent1_id => guy.id)
-      frank = Person.create(:name => 'Frank', :parent1_id => tom.id)
-      dave = Person.create(:name => 'Dave', :parent1_id => guy.id)
-      rachel = Person.create(:name => 'Rachel', :parent1_id => dave.id)
-      guy.grandchildren.should eq [frank, rachel]
-    end
-
-    it "returns nil if there are no grandchildren" do
-    guy = Person.create(:name => 'Guy')
-    guy.grandchildren.should eq nil
-    end
-
-    it "works if some children have grandchildren while others do not" do
-      guy = Person.create(:name => 'Guy')
-      tom = Person.create(:name => 'Tom', :parent1_id => guy.id)
-      frank = Person.create(:name => 'Frank', :parent1_id => tom.id)
-      dave = Person.create(:name => 'Dave', :parent1_id => guy.id)
-      guy.grandchildren.should eq [frank]
+      jane = Person.create(:name => 'Jane')
+      tom = Person.create(:name => 'Tom', :parent1_id => guy.id, :parent2_id => jane.id)
+      guy.siblings.should eq nil
     end
   end
 
-  it "updates the spouse's id when it's spouse_id is changed" do
-    earl = Person.create(:name => 'Earl')
-    steve = Person.create(:name => 'Steve')
-    steve.update(:spouse_id => earl.id)
-    earl.reload
-    earl.spouse_id.should eq steve.id
+  context '#nieces_and_nephews' do
+    it "returns all of a person's nieces and nephews" do
+      guy = Person.create(:name => 'Guy')
+      jane = Person.create(:name => 'Jane')
+      tom = Person.create(:name => 'Tom', :parent1_id => guy.id, :parent2_id => jane.id)
+      lenny = Person.create(:name => 'Lenny', :parent1_id => guy.id, :parent2_id => jane.id)
+      karen = Person.create(:name => 'Karen')
+      leslie = Person.create(:name => 'Leslie', :parent1_id => lenny.id, :parent2_id => karen.id)
+      tom.nieces_and_nephews.should eq [leslie]
+    end
+
+    it "returns nil for a person with no nieces or nephews" do
+      guy = Person.create(:name => 'Guy')
+      jane = Person.create(:name => 'Jane')
+      tom = Person.create(:name => 'Tom', :parent1_id => guy.id, :parent2_id => jane.id)
+      lenny = Person.create(:name => 'Lenny', :parent1_id => guy.id, :parent2_id => jane.id)
+      karen = Person.create(:name => 'Karen')
+      tom.nieces_and_nephews.should eq nil
+    end
+  end
+
+  context '#reload' do
+    it "updates the spouse's id when it's spouse_id is changed" do
+      earl = Person.create(:name => 'Earl')
+      steve = Person.create(:name => 'Steve')
+      steve.update(:spouse_id => earl.id)
+      earl.reload
+      earl.spouse_id.should eq steve.id
+    end
   end
 end

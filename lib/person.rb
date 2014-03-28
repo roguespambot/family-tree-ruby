@@ -35,44 +35,45 @@ class Person < ActiveRecord::Base
     end
   end
 
-  def grandparents
-    if Person.where(:parent1_id => "#{self.id}", :parent2_id => "#{self.id}").count == 0
-      return nil
-    else
-      parent1 = Person.find(parent1_id)
-      parent2 = Person.find(parent2_id)
-      Person.find(parent1.parent1_id, parent1.parent2_id, parent2.parent1_id, parent2.parent2_id)
-    end
-  end
-
   def kids
-    if Person.where(:parent1_id => "#{self.id}").count == 0
-      return nil
-    else
-    Person.where(:parent1_id => "#{self.id}")
-    end
-  end
-
-  def grandkids
-    if self.kids == nil
+    if Person.where("parent1_id = ? or parent2_id = ?", self.id, self.id).count == 0
       nil
     else
-      grandkids = []
-        self.kids.each do |kid|
-          unless kid.kids == nil
-            kid.kids.each do |grandkid|
-            grandkids << grandkid
+      Person.where("parent1_id = ? or parent2_id = ?", self.id, self.id)
+    end
+  end
+
+  def siblings
+    if parent1_id.nil? || parent2_id.nil?
+      nil
+    elsif Person.where.not("id = ?", self.id).where("parent1_id = ? and parent2_id = ?", self.parent1.id, self.parent2.id).count == 0
+      nil
+    else
+      Person.where.not("id = ?", self.id).where("parent1_id = ? or parent2_id = ?", self.parent1.id, self.parent2.id)
+    end
+  end
+
+  def nieces_and_nephews
+    n_array = []
+    if self.siblings == nil
+      nil
+    else
+      self.siblings.each do |sibling|
+        unless sibling.kids == nil
+          sibling.kids.each do |n|
+              n_array << n
           end
         end
       end
     end
 
-    if grandkids.count == 0
+    if n_array.count == 0
       nil
     else
-      grandkids
+      n_array
     end
   end
+
 
 private
 
