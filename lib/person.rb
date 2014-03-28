@@ -36,12 +36,12 @@ class Person < ActiveRecord::Base
   end
 
   def grandparents
-    if parent1_id.nil? || parent2_id.nil?
-      nil
+    if Person.where(:parent1_id => "#{self.id}", :parent2_id => "#{self.id}").count == 0
+      return nil
     else
-    parent1 = Person.find(parent1_id)
-    parent2 = Person.find(parent2_id)
-    Person.find(parent1.parent1_id, parent1.parent2_id, parent2.parent1_id, parent2.parent2_id)
+      parent1 = Person.find(parent1_id)
+      parent2 = Person.find(parent2_id)
+      Person.find(parent1.parent1_id, parent1.parent2_id, parent2.parent1_id, parent2.parent2_id)
     end
   end
 
@@ -57,16 +57,21 @@ class Person < ActiveRecord::Base
     if self.kids == nil
       nil
     else
-    grandkids = []
-      self.kids.each do |kid|
-        unless kid.kids == nil
-          kid.kids.each do |grandkid|
-          grandkids << grandkid
+      grandkids = []
+        self.kids.each do |kid|
+          unless kid.kids == nil
+            kid.kids.each do |grandkid|
+            grandkids << grandkid
           end
         end
       end
     end
-    grandkids
+
+    if grandkids.count == 0
+      nil
+    else
+      grandkids
+    end
   end
 
 private
