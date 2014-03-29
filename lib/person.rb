@@ -74,6 +74,20 @@ class Person < ActiveRecord::Base
     end
   end
 
+  def cousins
+    c_array = []
+    if self.parents == nil
+      nil
+    else
+      self.parents.each do |parent|
+        unless parent.nieces_and_nephews == nil
+          parent.nieces_and_nephews.each { |c| c_array << c }
+        end
+      end
+      c_array
+    end
+  end
+
 
 private
 

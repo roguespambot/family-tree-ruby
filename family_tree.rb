@@ -6,8 +6,49 @@ database_configurations = YAML::load(File.open('./db/config.yml'))
 development_configuration = database_configurations['development']
 ActiveRecord::Base.establish_connection(development_configuration)
 
+def ascii_art
+  puts "
+
+                                   ||`-.___
+                                   ||    _.>
+                                   ||_.-'
+               ==========================================
+                `.:::::::.       `:::::::.       `:::::::.
+                  :::::::.        :::::::.        :::::::\\
+                   L:::::::         :::::::         :::::::L
+                   J::::::::        ::::::::        :::::::J
+                    F:::::::        ::::::::        ::::::::L
+                    |:::::::        ::::::::        ::::::::|     .---.
+                    |:::::::        ::::::::        ::::::::|    /(@  o`.
+                    |:::::::        ::::::::        ::::::::|   |    /^^^
+     __             |:::::::        ::::::::        ::::::::|    \\ . \\vvv
+   .'_ \\            |:::::::        ::::::::        ::::::::|    \\`--'
+   (( ) |           |:::::::        ::::::::        ::::::::|      \\ `.
+    `/ /            |:::::::        ::::::::        ::::::::|       L  \\
+    / /             |:::::::        ::::::::        ::::::::|       |   \\
+   J J              |:::::::        ::::::::        ::::::::|       |    L
+   | |              |:::::::        ::::::::        ::::::::|       F    \\
+   | J\\             F:::::::        ::::::::        ::::::::F      /     |
+   |  L\\           J::::::::       .::::::::       .:::::::J      /      F
+   J  J `.     .   F:::::::        ::::::::        ::::::::F    .'      J
+    L  \\  `.  //  /:::::::'      .::::::::'      .::::::::/   .'        F
+    J   `.  `//_..---.   .---.   .---.   .---.   .---.   <---<         J
+     L    `-//_=/  _  \\=/  _  \\=/  _  \\=/  _  \\=/  _  \\=/  _  \\       /
+     J     /|  |  (_)  |  (_)  |  (_)  |  (_)  |  (_)  |  (_)  |     /
+      \\   / |   \\     //\\     //\\     //\\     //\\     //\\     /    .'
+       \\ / /     `---//  `---//  `---//  `---//  `---//  `---'   .'
+________/_/_________//______//______//______//______//_________.'_________
+##VK######################################################################
+
+  "
+end
+
+
 def menu
-  puts 'Welcome to the family tree!'
+  system "clear"
+  ascii_art
+  puts 'Welcome to the biological family tree!'
+  puts 'We will show you who you are related to by blood.'
   puts 'What would you like to do?'
 
   loop do
@@ -79,12 +120,15 @@ def pick_family_member
   list
   puts "\n\nEnter the number of the relative and I'll show you who they're related to."
   person = Person.find(gets.chomp)
-
+  system "clear"
   show_marriage(person)
   show_siblings(person)
   show_nieces_and_nephews(person)
+  show_cousins(person)
   show_descendants(person)
   show_ancestors(person)
+  puts "\n\n\nPress enter to return to the main menu."
+  gets.chomp
 end
 
 def show_marriage(person)
@@ -101,11 +145,11 @@ end
 def show_descendants(person, generation=0)
   unless person.kids.nil?
     if generation == 0
-      puts "Children:"
+      puts "\nChildren:"
     elsif generation == 1
-      puts "Grandchildren:"
+      puts "\nGrandchildren:"
     else
-      puts ("Great " * (generation - 2)) + "grandchildren:"
+      puts "\n" + ("Great " * (generation - 2)) + "grandchildren:"
     end
     next_generation = generation + 1
     person.kids.each { |kid| puts kid.name }
@@ -117,11 +161,11 @@ end
 def show_ancestors(person, generation=0)
   unless person.parents.nil?
     if generation == 0
-      puts "Parents:"
+      puts "\nParents:"
     elsif generation == -1
-      puts "Grandparents:"
+      puts "\nGrandparents:"
     else
-      puts ("Great " * (generation + 2)) + "grandparents:"
+      puts "\n" + ("Great " * (generation + 2)) + "grandparents:"
     end
     previous_generation = generation - 1
     person.parents.each { |parent| puts parent.name }
@@ -134,11 +178,11 @@ def show_siblings(person, generation=0)
   # puts person.name
   unless person.siblings.nil?
     if generation == 0
-      puts "Siblings:"
+      puts "\nSiblings:"
     elsif generation == -1
-      puts "Uncles/Aunts:"
+      puts "\nUncles/Aunts:"
     elsif generation <= -2
-      puts ("Great " * (generation + 2)) + "uncles/aunts:"
+      puts "\n" + ("Great " * (generation + 2)) + "uncles/aunts:"
     end
     person.siblings.each { |sibling| puts sibling.name }
   end
@@ -147,13 +191,20 @@ end
 def show_nieces_and_nephews(person, generation=0)
   unless person.nieces_and_nephews.nil?
     if generation == 0
-      puts "Nieces/Nephews:"
+      puts "\nNieces/Nephews:"
     elsif generation == 1
-      puts "Grand nieces/nephews:"
+      puts "\nGrand nieces/nephews:"
     elsif generation > 1
-      puts ("Great " * (generation + 2)) + "grandnieces/grandnephews:"
+      puts "\n" + ("Great " * (generation + 2)) + "grandnieces/grandnephews:"
     end
     person.nieces_and_nephews.each { |n| puts n.name }
+  end
+end
+
+def show_cousins(person)
+  unless person.cousins.nil?
+    puts "\nCousins:"
+    person.cousins.each { |c| puts c.name }
   end
 end
 

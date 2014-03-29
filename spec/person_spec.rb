@@ -100,6 +100,20 @@ describe Person do
     end
   end
 
+  context '#cousins' do
+    it "displays cousins" do
+      guy = Person.create(:name => 'Guy')
+      jane = Person.create(:name => 'Jane')
+      tom = Person.create(:name => 'Tom', :parent1_id => guy.id, :parent2_id => jane.id)
+      allison = Person.create(:name => 'Allison')
+      lenny = Person.create(:name => 'Lenny', :parent1_id => guy.id, :parent2_id => jane.id)
+      karen = Person.create(:name => 'Karen')
+      leslie = Person.create(:name => 'Leslie', :parent1_id => lenny.id, :parent2_id => karen.id)
+      henry = Person.create(:name => 'Henry', :parent1_id => tom.id, :parent2_id => allison.id)
+      leslie.cousins.should eq [henry]
+    end
+  end
+
   context '#reload' do
     it "updates the spouse's id when it's spouse_id is changed" do
       earl = Person.create(:name => 'Earl')
